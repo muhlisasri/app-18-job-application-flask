@@ -1,11 +1,20 @@
 from flask import Flask, render_template, request, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "muhlisasri"
 app.config["SQLALCHEMY_DATABASE_URI"]= "sqlite:///data.db"
+app.config["MAIL_SERVER"] = "smtp.gmail.com"
+app.config["MAIL_PORT"] = 465
+app.config["MAIL_USE_SSL"] = True
+app.config["MAIL_USERNAME"] = "hire.muhlis@gmail.com"
+app.config["MAIL_PASSWORD"] = "wcmkufpeoscqfdat"
+
 db = SQLAlchemy(app)
+
+mail = Mail(app)
 
 class Form(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -29,6 +38,15 @@ def index():
         form_data = Form(nama=nama, email=email, nowa=nowa, tgl_lahir=tgl_lahir_conv, status=status)
         db.session.add(form_data)
         db.session.commit()
+
+        message_body = f"Terima kasih atas pendaftarannya, {nama}. "\
+                       f"Berikut adalah data anda : {nama} \n {nowa} \n "
+        message = Message(subject="Registrasi Berhasil",
+                          sender=app.config["MAIL_USERNAME"],
+                          recipients=[email],
+                          body=message_body)
+        mail.send(message)
+
         flash(f"Terima kasih {nama}, formulirmu berhasil dikirim", "sukses")
 
     return render_template("index.html")
